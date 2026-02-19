@@ -1,0 +1,33 @@
+ I am building a livestream and short-video sharing app and currently focusing on the frontend design and development.
+
+Core Features:
+
+i) Short Video Sharing (Reels-Style Feed)
+
+A vertical, swipe-based short video experience similar to Instagram Reels or TikTok.
+
+Users can scroll through engaging short-form videos.
+
+Clean UI with interactive elements such as likes, comments, shares, and profile access.
+
+ii) Interactive Livestream System
+
+A host starts and manages the livestream session.
+
+Instead of passive viewing, selected viewers can join the host live “in line” (on stage).
+
+The host can organize competitions among participating viewers.
+
+Participants may be eliminated through a live audience voting system.
+
+Real-time engagement features such as chat, reactions, and voting UI are required.
+
+iii) Premium / Paid Livestream Events
+
+Hosts can organize extended live events (e.g., comedy shows, talent shows, special sessions).
+
+Only users who purchase access (paid viewers) can watch these premium livestreams.
+
+Clear UI flow for ticket purchase, access control, and exclusive viewing experience.
+
+The frontend should be modern, highly engaging, mobile-first, and optimized for real-time interaction.
