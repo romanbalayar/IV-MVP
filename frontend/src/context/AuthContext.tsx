@@ -8,7 +8,7 @@ interface AuthState {
   profile: Profile | null
   session: Session | null
   loading: boolean
-  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null; needsConfirmation: boolean }>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -28,7 +28,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data)
+
+    if (data) {
+      setProfile(data)
+    } else {
+      // Profile missing (account created before tables existed) — create one
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          username: userId.slice(0, 8),
+          display_name: 'User',
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
+          is_host: false,
+        })
+        .select()
+        .single()
+      setProfile(newProfile)
+    }
   }
 
   async function refreshProfile() {
@@ -61,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function signUp(email: string, password: string, username: string) {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -71,7 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       },
     })
-    return { error: error?.message ?? null }
+    const needsConfirmation = !error && !data.session
+    return { error: error?.message ?? null, needsConfirmation }
   }
 
   async function signIn(email: string, password: string) {

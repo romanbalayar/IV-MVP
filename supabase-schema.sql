@@ -96,6 +96,42 @@ create policy "Users can view own tickets"
 create policy "Service role can insert tickets"
   on public.tickets for insert with check (true);
 
+-- 4. Challenges table (Live Challenges)
+create table public.challenges (
+  id uuid primary key default gen_random_uuid(),
+  host_id uuid references public.profiles(id) on delete cascade not null,
+  challenge_text text not null,
+  coins integer default 100,
+  youtube_url text,
+  is_live boolean default true,
+  created_at timestamptz default now()
+);
+
+alter table public.challenges enable row level security;
+
+create policy "Challenges are viewable by everyone"
+  on public.challenges for select using (true);
+
+create policy "Users can create challenges"
+  on public.challenges for insert with check (auth.uid() = host_id);
+
+create policy "Hosts can update own challenges"
+  on public.challenges for update using (auth.uid() = host_id);
+
+create policy "Hosts can delete own challenges"
+  on public.challenges for delete using (auth.uid() = host_id);
+
+-- View for challenge with host info
+create or replace view public.challenges_with_host as
+select
+  c.*,
+  p.username as host_username,
+  p.display_name as host_display_name,
+  p.avatar_url as host_avatar_url
+from public.challenges c
+join public.profiles p on c.host_id = p.id;
+
+
 -- View for show with host info (convenient join)
 create or replace view public.shows_with_host as
 select

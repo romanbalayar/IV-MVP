@@ -19,6 +19,9 @@ import {
   Plus,
   BadgeCheck,
   Loader2,
+  X,
+  Check,
+  Camera,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -56,6 +59,144 @@ function formatTime(dateStr: string) {
 
 function formatPrice(cents: number) {
   return (cents / 100).toFixed(2)
+}
+
+function EditProfileModal({
+  currentName,
+  currentUsername,
+  currentAvatar,
+  onClose,
+  onSave,
+}: {
+  currentName: string
+  currentUsername: string
+  currentAvatar: string
+  onClose: () => void
+  onSave: (data: { display_name: string; username: string; avatar_url: string }) => Promise<void>
+}) {
+  const [displayName, setDisplayName] = useState(currentName)
+  const [username, setUsername] = useState(currentUsername)
+  const [avatarUrl, setAvatarUrl] = useState(currentAvatar)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!displayName.trim()) {
+      setError('Display name is required')
+      return
+    }
+    if (!username.trim()) {
+      setError('Username is required')
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      await onSave({
+        display_name: displayName.trim(),
+        username: username.trim(),
+        avatar_url: avatarUrl.trim(),
+      })
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-[430px] bg-iv-bg border-t border-iv-card-border rounded-t-3xl max-h-[85vh] overflow-y-auto">
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+
+        <div className="flex items-center justify-between px-5 pb-4 pt-2">
+          <h2 className="text-white text-xl font-bold">Edit Profile</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center btn-press">
+            <X size={16} className="text-white" />
+          </button>
+        </div>
+
+        <div className="px-5 pb-8 space-y-5">
+          {/* Avatar Preview */}
+          <div className="flex flex-col items-center">
+            <div className="relative mb-3">
+              <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-br from-purple-500 via-purple-600 to-violet-700">
+                <div className="w-full h-full rounded-full overflow-hidden bg-iv-card border-2 border-iv-bg">
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-iv-purple flex items-center justify-center border-2 border-iv-bg">
+                <Camera size={12} className="text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Avatar URL */}
+          <div>
+            <label className="text-iv-text-secondary text-xs font-medium mb-1.5 block">
+              Avatar URL
+            </label>
+            <input
+              type="url"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="https://example.com/avatar.jpg"
+              className="w-full bg-iv-card border border-iv-card-border rounded-xl px-4 py-3 text-white text-sm placeholder:text-iv-text-muted focus:outline-none focus:border-iv-purple transition-colors"
+            />
+          </div>
+
+          {/* Display Name */}
+          <div>
+            <label className="text-iv-text-secondary text-xs font-medium mb-1.5 block">
+              Display Name *
+            </label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your Name"
+              className="w-full bg-iv-card border border-iv-card-border rounded-xl px-4 py-3 text-white text-sm placeholder:text-iv-text-muted focus:outline-none focus:border-iv-purple transition-colors"
+            />
+          </div>
+
+          {/* Username */}
+          <div>
+            <label className="text-iv-text-secondary text-xs font-medium mb-1.5 block">
+              Username *
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-iv-text-muted text-sm">@</span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                placeholder="username"
+                className="w-full bg-iv-card border border-iv-card-border rounded-xl pl-8 pr-4 py-3 text-white text-sm placeholder:text-iv-text-muted focus:outline-none focus:border-iv-purple transition-colors"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-base btn-press hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function EventCard({ show, onClick }: { show: ShowWithHost; onClick: () => void }) {
@@ -137,12 +278,14 @@ function EventCard({ show, onClick }: { show: ShowWithHost; onClick: () => void 
 }
 
 export default function ProfilePage() {
-  const { user, profile, signOut, loading: authLoading } = useAuth()
+  const { user, profile, signOut, refreshProfile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [myShows, setMyShows] = useState<ShowWithHost[]>([])
   const [myTicketShows, setMyTicketShows] = useState<ShowWithHost[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [becomingHost, setBecomingHost] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -179,11 +322,41 @@ export default function ProfilePage() {
     setLoadingData(false)
   }
 
+  async function handleSaveProfile(data: { display_name: string; username: string; avatar_url: string }) {
+    if (!user) return
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        display_name: data.display_name,
+        username: data.username,
+        avatar_url: data.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
+      })
+
+    if (error) {
+      if (error.message.includes('unique') || error.code === '23505') {
+        throw new Error('Username is already taken')
+      }
+      throw new Error(error.message)
+    }
+
+    await refreshProfile()
+    setShowEditModal(false)
+  }
+
   async function handleBecomeHost() {
     if (!user) return
     setBecomingHost(true)
     await supabase.from('profiles').update({ is_host: true }).eq('id', user.id)
-    window.location.reload()
+    await refreshProfile()
+    setBecomingHost(false)
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true)
+    await signOut()
+    navigate('/')
   }
 
   if (authLoading) {
@@ -213,6 +386,7 @@ export default function ProfilePage() {
   }
 
   const displayName = profile?.display_name || profile?.username || 'User'
+  const username = profile?.username || ''
   const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`
   const isHost = profile?.is_host || false
 
@@ -221,18 +395,27 @@ export default function ProfilePage() {
       <div className="relative">
         <div className="absolute inset-0 h-64 bg-gradient-to-b from-purple-900/40 via-iv-bg/80 to-iv-bg pointer-events-none" />
 
+        {/* Top Bar: Edit + Logout */}
         <div className="relative flex justify-between items-center px-4 pt-4">
-          <button className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center btn-press">
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center btn-press"
+          >
             <Edit3 size={16} className="text-white" />
           </button>
           <button
-            onClick={async () => { await signOut(); navigate('/') }}
-            className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center btn-press"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 btn-press"
           >
-            <LogOut size={16} className="text-white" />
+            <LogOut size={14} className="text-red-400" />
+            <span className="text-red-400 text-xs font-semibold">
+              {loggingOut ? 'Logging out...' : 'Logout'}
+            </span>
           </button>
         </div>
 
+        {/* Profile Section */}
         <div className="relative flex flex-col items-center pt-4 pb-6">
           <div className="relative mb-4">
             <div className="w-28 h-28 rounded-full p-[3px] bg-gradient-to-br from-purple-500 via-purple-600 to-violet-700">
@@ -240,12 +423,22 @@ export default function ProfilePage() {
                 <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
               </div>
             </div>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-iv-purple flex items-center justify-center border-2 border-iv-bg btn-press"
+            >
+              <Camera size={14} className="text-white" />
+            </button>
           </div>
 
           <div className="flex items-center gap-1.5 mb-1">
             <h1 className="text-white text-2xl font-bold">{displayName}</h1>
             {isHost && <BadgeCheck size={22} className="text-iv-purple fill-iv-purple/20" />}
           </div>
+
+          {username && (
+            <p className="text-iv-text-secondary text-sm mb-1">@{username}</p>
+          )}
 
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
@@ -257,7 +450,7 @@ export default function ProfilePage() {
             </span>
           </div>
 
-          <p className="text-iv-text-secondary text-sm">{user.email}</p>
+          <p className="text-iv-text-muted text-xs">{user.email}</p>
         </div>
       </div>
 
@@ -391,6 +584,17 @@ export default function ProfilePage() {
       </div>
 
       <div className="h-8" />
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <EditProfileModal
+          currentName={displayName}
+          currentUsername={username}
+          currentAvatar={avatarUrl}
+          onClose={() => setShowEditModal(false)}
+          onSave={handleSaveProfile}
+        />
+      )}
     </div>
   )
 }

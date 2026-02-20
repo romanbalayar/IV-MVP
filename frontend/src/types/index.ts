@@ -30,6 +30,22 @@ export interface ShowWithHost extends Show {
   tickets_sold: number
 }
 
+export interface Challenge {
+  id: string
+  host_id: string
+  challenge_text: string
+  coins: number
+  youtube_url: string | null
+  is_live: boolean
+  created_at: string
+}
+
+export interface ChallengeWithHost extends Challenge {
+  host_username: string | null
+  host_display_name: string | null
+  host_avatar_url: string | null
+}
+
 export interface Ticket {
   id: string
   user_id: string
