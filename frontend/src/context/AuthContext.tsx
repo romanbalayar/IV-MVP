@@ -23,28 +23,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (data) {
-      setProfile(data)
-    } else {
-      // Profile missing (account created before tables existed) — create one
-      const { data: newProfile } = await supabase
+    try {
+      const { data } = await supabase
         .from('profiles')
-        .upsert({
-          id: userId,
-          username: userId.slice(0, 8),
-          display_name: 'User',
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
-          is_host: false,
-        })
-        .select()
+        .select('*')
+        .eq('id', userId)
         .single()
-      setProfile(newProfile)
+
+      if (data) {
+        setProfile(data)
+      } else {
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            username: userId.slice(0, 8),
+            display_name: 'User',
+            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
+            is_host: false,
+          })
+          .select()
+          .single()
+        setProfile(newProfile)
+      }
+    } catch {
+      setProfile(null)
     }
   }
 
@@ -55,7 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Stale/invalid refresh token — clear it
+        supabase.auth.signOut()
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setLoading(false)
+        return
+      }
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -64,7 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        supabase.auth.signOut()
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        return
+      }
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {

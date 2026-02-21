@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Loader2, Image } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -7,8 +7,14 @@ import { supabase } from '../lib/supabase'
 const categories = ['Music', 'Comedy', 'Dance', 'Talent', 'Talk Show', 'Other']
 
 export default function CreateShowPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth')
+    }
+  }, [user, authLoading, navigate])
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
