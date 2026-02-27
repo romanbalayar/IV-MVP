@@ -3,17 +3,29 @@ node_modules/
 frontend/node_modules/
 backend/node_modules/
 
-# Environment variables
+# Environment variables — NEVER commit these
 .env
 .env.local
 .env.production
+.env.development
 .env.*.local
 frontend/.env
+frontend/.env.local
+frontend/.env.production
 backend/.env
+backend/.env.local
 
 # Build output
 frontend/dist/
 frontend/build/
+backend/dist/
+
+# Vite cache
+frontend/.vite/
+
+# TypeScript build info
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
 
 # IDE / Editor
 .vscode/
@@ -24,15 +36,27 @@ frontend/build/
 
 # OS files
 .DS_Store
+.DS_Store?
 Thumbs.db
 desktop.ini
+ehthumbs.db
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
 
-# Lock files (optional — remove these lines if you want to track them)
-# package-lock.json
+# Runtime / temp
+.cache/
+tmp/
+temp/
 
 # Stripe CLI
 .stripe/
+
+# Coverage / test output
+coverage/
+.nyc_output/
