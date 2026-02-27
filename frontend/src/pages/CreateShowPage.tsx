@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Loader2, Image } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+
 
 const categories = ['Music', 'Comedy', 'Dance', 'Talent', 'Talk Show', 'Other']
 
@@ -42,23 +42,8 @@ export default function CreateShowPage() {
     const showDate = new Date(`${date}T${time}`)
     const priceInCents = Math.round((parseFloat(price) || 0) * 100)
 
-    const { error: dbError } = await supabase.from('shows').insert({
-      host_id: user.id,
-      title: title.trim(),
-      description: description.trim() || null,
-      cover_image_url: coverUrl.trim() || null,
-      category,
-      show_date: showDate.toISOString(),
-      ticket_price: priceInCents,
-      total_tickets: parseInt(totalTickets) || 100,
-    })
-
-    if (dbError) {
-      setError(dbError.message)
-      setLoading(false)
-      return
-    }
-
+    // Mock: simulate show creation
+    await new Promise((r) => setTimeout(r, 500))
     navigate('/profile')
   }
 
@@ -135,11 +120,10 @@ export default function CreateShowPage() {
                   key={cat}
                   type="button"
                   onClick={() => setCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all btn-press ${
-                    category === cat
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all btn-press ${category === cat
                       ? 'bg-iv-purple text-white'
                       : 'bg-iv-card border border-iv-card-border text-iv-text-secondary'
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>

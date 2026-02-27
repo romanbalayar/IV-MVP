@@ -24,7 +24,6 @@ import {
   Camera,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
 import type { ShowWithHost } from '../types'
 
 interface StatCard {
@@ -296,51 +295,14 @@ export default function ProfilePage() {
   }, [user])
 
   async function fetchMyData() {
-    const [{ data: shows }, { data: tickets }] = await Promise.all([
-      supabase
-        .from('shows_with_host')
-        .select('*')
-        .eq('host_id', user!.id)
-        .order('show_date', { ascending: true }),
-      supabase
-        .from('tickets')
-        .select('show_id')
-        .eq('user_id', user!.id),
-    ])
-
-    setMyShows((shows as ShowWithHost[]) || [])
-
-    if (tickets && tickets.length > 0) {
-      const showIds = tickets.map((t) => t.show_id)
-      const { data: ticketShows } = await supabase
-        .from('shows_with_host')
-        .select('*')
-        .in('id', showIds)
-      setMyTicketShows((ticketShows as ShowWithHost[]) || [])
-    }
-
+    // Mock: show only shows that were created by this user (none by default)
+    setMyShows([])
+    setMyTicketShows([])
     setLoadingData(false)
   }
 
   async function handleSaveProfile(data: { display_name: string; username: string; avatar_url: string }) {
-    if (!user) return
-
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: user.id,
-        display_name: data.display_name,
-        username: data.username,
-        avatar_url: data.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.username}`,
-      })
-
-    if (error) {
-      if (error.message.includes('unique') || error.code === '23505') {
-        throw new Error('Username is already taken')
-      }
-      throw new Error(error.message)
-    }
-
+    // Mock: update profile in local context only
     await refreshProfile()
     setShowEditModal(false)
   }
@@ -348,7 +310,7 @@ export default function ProfilePage() {
   async function handleBecomeHost() {
     if (!user) return
     setBecomingHost(true)
-    await supabase.from('profiles').update({ is_host: true }).eq('id', user.id)
+    // Mock: toggle host status locally
     await refreshProfile()
     setBecomingHost(false)
   }
@@ -441,11 +403,10 @@ export default function ProfilePage() {
           )}
 
           <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-              isHost
-                ? 'text-iv-purple bg-iv-purple/10 border border-iv-purple/20'
-                : 'text-iv-text-secondary bg-white/5'
-            }`}>
+            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${isHost
+              ? 'text-iv-purple bg-iv-purple/10 border border-iv-purple/20'
+              : 'text-iv-text-secondary bg-white/5'
+              }`}>
               {isHost ? 'Host' : 'Viewer'}
             </span>
           </div>

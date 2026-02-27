@@ -1,12 +1,16 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { supabase } from '../lib/supabase'
-import type { User, Session } from '@supabase/supabase-js'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import type { Profile } from '../types'
+import { MOCK_PROFILE, MOCK_USER_ID } from '../lib/mockData'
+
+// Minimal mock User shape (mirrors what pages use from useAuth)
+export interface MockUser {
+  id: string
+  email: string
+}
 
 interface AuthState {
-  user: User | null
+  user: MockUser | null
   profile: Profile | null
-  session: Session | null
   loading: boolean
   signUp: (email: string, password: string, username: string) => Promise<{ error: string | null; needsConfirmation: boolean }>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
@@ -17,112 +21,39 @@ interface AuthState {
 const AuthContext = createContext<AuthState | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<MockUser | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  async function fetchProfile(userId: string) {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (data) {
-        setProfile(data)
-      } else {
-        const { data: newProfile } = await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            username: userId.slice(0, 8),
-            display_name: 'User',
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}`,
-            is_host: false,
-          })
-          .select()
-          .single()
-        setProfile(newProfile)
-      }
-    } catch {
-      setProfile(null)
-    }
+  async function signIn(email: string, _password: string) {
+    const mockUser: MockUser = { id: MOCK_USER_ID, email }
+    setUser(mockUser)
+    setProfile({ ...MOCK_PROFILE, id: MOCK_USER_ID })
+    return { error: null }
   }
 
-  async function refreshProfile() {
-    if (user) {
-      await fetchProfile(user.id)
-    }
-  }
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        // Stale/invalid refresh token — clear it
-        supabase.auth.signOut()
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        setLoading(false)
-        return
-      }
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      }
-      setLoading(false)
+  async function signUp(email: string, _password: string, username: string) {
+    const mockUser: MockUser = { id: MOCK_USER_ID, email }
+    setUser(mockUser)
+    setProfile({
+      ...MOCK_PROFILE,
+      id: MOCK_USER_ID,
+      username,
+      display_name: username,
     })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'TOKEN_REFRESHED' && !session) {
-        supabase.auth.signOut()
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        return
-      }
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setProfile(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function signUp(email: string, password: string, username: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          display_name: username,
-        },
-      },
-    })
-    const needsConfirmation = !error && !data.session
-    return { error: error?.message ?? null, needsConfirmation }
-  }
-
-  async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    return { error: null, needsConfirmation: false }
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    setUser(null)
     setProfile(null)
   }
 
+  async function refreshProfile() {
+    // no-op in mock mode
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, session, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading: false, signUp, signIn, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )

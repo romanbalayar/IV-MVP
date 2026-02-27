@@ -11,7 +11,7 @@ import {
   Loader2,
   Radio,
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { MOCK_SHOWS } from '../lib/mockData'
 import { useAuth } from '../context/AuthContext'
 import type { ShowWithHost } from '../types'
 
@@ -180,28 +180,10 @@ export default function ShowPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchShows()
-    if (user) fetchMyTickets()
-  }, [user])
-
-  async function fetchShows() {
-    const { data } = await supabase
-      .from('shows_with_host')
-      .select('*')
-      .order('show_date', { ascending: true })
-
-    setShows((data as ShowWithHost[]) || [])
+    setShows(MOCK_SHOWS)
+    setMyTickets([])
     setLoading(false)
-  }
-
-  async function fetchMyTickets() {
-    if (!user) return
-    const { data } = await supabase
-      .from('tickets')
-      .select('show_id')
-      .eq('user_id', user.id)
-    setMyTickets(data || [])
-  }
+  }, [])
 
   const featured = shows.find((s) => s.is_featured || s.is_live) || shows[0]
   const upcoming = shows.filter((s) => s.id !== featured?.id)

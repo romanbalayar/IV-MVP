@@ -12,7 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react'
-import { supabase, API_URL } from '../lib/supabase'
+import { MOCK_SHOWS } from '../lib/mockData'
 import { useAuth } from '../context/AuthContext'
 import type { ShowWithHost } from '../types'
 
@@ -59,120 +59,33 @@ export default function ShowDetailPage() {
   const [youtubeInput, setYoutubeInput] = useState('')
   const [updatingShow, setUpdatingShow] = useState(false)
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
     if (!id) return
-
-    const { data: showData } = await supabase
-      .from('shows_with_host')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (showData) {
-      setShow(showData as ShowWithHost)
-      setYoutubeInput(showData.youtube_url || '')
-      if (user) {
-        setIsHost(showData.host_id === user.id)
-      }
-    }
-
-    if (user) {
-      const { data: ticket } = await supabase
-        .from('tickets')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('show_id', id)
-        .single()
-      setHasTicket(!!ticket)
-    }
-
+    const found = MOCK_SHOWS.find((s) => s.id === id) || null
+    setShow(found)
+    if (found) setYoutubeInput(found.youtube_url || '')
     setLoading(false)
-  }, [id, user])
+  }, [id])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
-  // Handle Stripe redirect
-  useEffect(() => {
-    const sessionId = searchParams.get('session_id')
-    if (sessionId && user) {
-      setVerifying(true)
-      fetch(`${API_URL}/api/verify-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.ticket) {
-            setHasTicket(true)
-            setSuccessMsg('Payment successful! You now have access to this show.')
-          }
-          setVerifying(false)
-          setSearchParams({}, { replace: true })
-        })
-        .catch(() => {
-          setVerifying(false)
-          setSearchParams({}, { replace: true })
-        })
-    }
+  // No Stripe redirect handling in demo mode
 
-    if (searchParams.get('canceled') === 'true') {
-      setError('Payment was canceled.')
-      setSearchParams({}, { replace: true })
-    }
-  }, [searchParams, user, setSearchParams])
-
-  async function handleBuyTicket() {
+  function handleBuyTicket() {
     if (!user) {
       navigate('/auth')
       return
     }
-
-    if (!show) return
-    setBuying(true)
-    setError('')
-
-    try {
-      const res = await fetch(`${API_URL}/api/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ showId: show.id, userId: user.id }),
-      })
-
-      const data = await res.json()
-
-      if (data.error) {
-        if (data.error.includes('already have a ticket')) {
-          setHasTicket(true)
-        } else {
-          setError(data.error)
-        }
-        setBuying(false)
-        return
-      }
-
-      window.location.href = data.url
-    } catch {
-      setError('Failed to start checkout. Please try again.')
-      setBuying(false)
-    }
+    // Mock: instantly grant ticket
+    setHasTicket(true)
+    setSuccessMsg('Ticket granted! You now have access to this show.')
   }
 
-  async function handleUpdateShow(updates: Partial<{ youtube_url: string; is_live: boolean }>) {
+  function handleUpdateShow(updates: Partial<{ youtube_url: string; is_live: boolean }>) {
     if (!show || !isHost) return
-    setUpdatingShow(true)
-
-    const { error } = await supabase
-      .from('shows')
-      .update(updates)
-      .eq('id', show.id)
-
-    if (!error) {
-      await fetchData()
-    }
-    setUpdatingShow(false)
+    setShow({ ...show, ...updates })
   }
 
   if (loading) {
@@ -389,11 +302,10 @@ export default function ShowDetailPage() {
                 <button
                   onClick={() => handleUpdateShow({ is_live: !show.is_live })}
                   disabled={updatingShow}
-                  className={`px-4 py-2 rounded-full text-xs font-bold btn-press ${
-                    show.is_live
+                  className={`px-4 py-2 rounded-full text-xs font-bold btn-press ${show.is_live
                       ? 'bg-red-500 text-white'
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                  }`}
+                    }`}
                 >
                   {show.is_live ? 'End Show' : 'Go Live'}
                 </button>
