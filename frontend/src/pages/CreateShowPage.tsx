@@ -1,20 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Loader2, Image } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
 
 
 const categories = ['Music', 'Comedy', 'Dance', 'Talent', 'Talk Show', 'Other']
 
 export default function CreateShowPage() {
-  const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth')
-    }
-  }, [user, authLoading, navigate])
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -29,7 +21,6 @@ export default function CreateShowPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!user) return
 
     if (!title.trim() || !date || !time) {
       setError('Title, date, and time are required')
@@ -121,8 +112,8 @@ export default function CreateShowPage() {
                   type="button"
                   onClick={() => setCategory(cat)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all btn-press ${category === cat
-                      ? 'bg-iv-purple text-white'
-                      : 'bg-iv-card border border-iv-card-border text-iv-text-secondary'
+                    ? 'bg-iv-purple text-white'
+                    : 'bg-iv-card border border-iv-card-border text-iv-text-secondary'
                     }`}
                 >
                   {cat}

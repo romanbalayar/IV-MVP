@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Clock,
@@ -43,14 +43,11 @@ function extractYouTubeId(url: string): string | null {
 export default function ShowDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   const { user } = useAuth()
 
   const [show, setShow] = useState<ShowWithHost | null>(null)
   const [hasTicket, setHasTicket] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [buying, setBuying] = useState(false)
-  const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
 
@@ -172,12 +169,7 @@ export default function ShowDetailPage() {
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
-        {verifying && (
-          <div className="bg-iv-purple/10 border border-iv-purple/20 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
-            <Loader2 size={18} className="text-iv-purple animate-spin flex-shrink-0" />
-            <p className="text-iv-purple text-sm">Verifying payment...</p>
-          </div>
-        )}
+
 
         {/* Show Info */}
         <div className="mb-5">
@@ -231,15 +223,10 @@ export default function ShowDetailPage() {
         {!isHost && !hasTicket && (
           <button
             onClick={handleBuyTicket}
-            disabled={buying}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-base btn-press hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 mb-4"
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-base btn-press hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mb-4"
           >
-            {buying ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              <Ticket size={20} />
-            )}
-            {buying ? 'Redirecting to Stripe...' : `Get Ticket — $${formatPrice(show.ticket_price)}`}
+            <Ticket size={20} />
+            {`Get Ticket — $${formatPrice(show.ticket_price)}`}
           </button>
         )}
 
@@ -303,8 +290,8 @@ export default function ShowDetailPage() {
                   onClick={() => handleUpdateShow({ is_live: !show.is_live })}
                   disabled={updatingShow}
                   className={`px-4 py-2 rounded-full text-xs font-bold btn-press ${show.is_live
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
                     }`}
                 >
                   {show.is_live ? 'End Show' : 'Go Live'}
