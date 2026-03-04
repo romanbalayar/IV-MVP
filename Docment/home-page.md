@@ -1,16 +1,16 @@
 # 🏠 Home Page — Discovery & Positioning
 
 ## Purpose
-The Home page is the **discovery layer** of the platform. It is the first thing users see and must immediately communicate what IV is about: **structured, premium long-form live events and real live challenges** — not random social content.
+The Home page is the **discovery layer** of the platform. It is the first thing users see and must immediately communicate what IV is about: **structured, premium long-form live events and real live challenges**  and random social content too base on what user want see and spending most time on(same like as tiktok and Instagram reels.) 
 
 It serves two roles simultaneously:
-1. A **curated event discovery feed** (upcoming and live shows)
-2. A **short-form video reel feed** (TikTok / Instagram Reels style)
+1. A **short-form video reel feed** (TikTok / Instagram Reels style) - might be random videos just like tiktok and Instagram reels.
+2. A **curated event discovery feed** (upcoming and live shows)
 
 ---
 
 ## Primary Goal
-Help users find something interesting and push them toward a **Show Page** — where monetization happens.
+Help users find something interesting and push them toward a **Show Page** or **Live Page** — where monetization happens.
 
 ---
 
