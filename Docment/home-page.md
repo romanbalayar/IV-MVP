@@ -10,7 +10,7 @@ It serves two roles simultaneously:
 ---
 
 ## Primary Goal
-Help users find something interesting and push them toward a **Show Page** or **Live Page** — where monetization happens.
+Help users find something interesting and push them toward a **Show Page** or **Live Page** -  where monetization happens.
 
 ---
 
